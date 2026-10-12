@@ -1,0 +1,6 @@
+# MediaPipe 1.x ships only the Tasks API (no legacy mp.solutions).
+mediapipe>=1.1
+# Use the contrib build: mediapipe already depends on it, and installing
+# opencv-python alongside it causes cv2 module conflicts.
+opencv-contrib-python
+numpy
