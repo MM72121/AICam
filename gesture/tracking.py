@@ -28,10 +28,12 @@ HAND_CONNECTIONS: list[tuple[int, int]] = [
 WRIST = 0
 THUMB_TIP = 4
 INDEX_MCP = 5
+INDEX_PIP = 6
 INDEX_TIP = 8
 MIDDLE_MCP = 9
 MIDDLE_TIP = 12
 RING_TIP = 16
+PINKY_MCP = 17
 PINKY_TIP = 20
 FINGERTIPS = (THUMB_TIP, INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP)
 
@@ -43,11 +45,16 @@ class Hand:
     landmarks: (21, 3) array of normalized coords. x and y are in [0, 1]
         relative to the frame width/height. z is relative depth (smaller
         means closer to the camera), on roughly the same scale as x.
+        Good for *where* the hand is on screen.
+    world: (21, 3) array of MediaPipe's estimated real 3D positions in
+        meters, centered on the hand. Unaffected by tilt, rotation or
+        distance from the camera, so it's good for *shape* (e.g. pinch distance).
     handedness: "Left" or "Right" as MediaPipe reports it.
     score: handedness confidence in [0, 1].
     """
 
     landmarks: np.ndarray
+    world: np.ndarray
     handedness: str
     score: float
 
@@ -96,12 +103,13 @@ class HandTracker:
 
         result = self._landmarker.detect_for_video(image, ts_ms)
         hands = []
-        for lms, cats in zip(result.hand_landmarks, result.handedness):
+        for lms, world, cats in zip(result.hand_landmarks, result.hand_world_landmarks, result.handedness):
             label = cats[0].category_name
             if self.mirrored:
                 label = {"Left": "Right", "Right": "Left"}.get(label, label)
             hands.append(Hand(
                 landmarks=np.array([(p.x, p.y, p.z) for p in lms], dtype=np.float32),
+                world=np.array([(p.x, p.y, p.z) for p in world], dtype=np.float32),
                 handedness=label,
                 score=float(cats[0].score),
             ))

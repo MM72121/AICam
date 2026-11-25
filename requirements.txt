@@ -4,3 +4,4 @@ mediapipe>=1.1
 # opencv-python alongside it causes cv2 module conflicts.
 opencv-contrib-python
 numpy
+pynput
